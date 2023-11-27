@@ -61,23 +61,23 @@ function getSize(width, height) {
     };
 }
 
-async function saveLabel(blob, ext) {
-    let items = global.localStorage.getItem('counter');
-    let counter = parseInt(items.counter);
+async function saveLabel(blob, ext, counter) {
+
     const fileName = `LBL${pad(counter, 6)}.${ext}`;
 
-    global.localStorage.setItem('counter', ++counter);
 
-    // Creating and Writing to the sample.txt file
-    fs.writeFile(fileName,
-        new Uint8Array(await blob.arrayBuffer()),
-        function (err) {
-            if (err) throw err;
-            notify('Label <b>{0}</b> saved in folder <b>{1}</b>'.format(fileName, $('#txt-path').val()), 'floppy-saved', 'info', 1000);
-        });
+    try {
+        fs.writeFileSync(fileName, new Uint8Array(await blob.arrayBuffer()))
+        // file written successfully
+        notify('Label <b>{0}</b> saved in folder <b>{1}</b>'.format(fileName, $('#txt-path').val()), 'floppy-saved', 'info', 1000);
+    } catch (err) {
+        console.error(err);
+        notify(`error in saving label to ${fileName} ${err}`, 'floppy-saved', 'danger', 0)
+    }
+
 }
 
-async function fetchAndSavePDF(api_url, zpl) {
+async function fetchAndSavePDF(api_url, zpl, counter) {
 
     let r1 = await fetch(api_url, {
         method: "POST",
@@ -90,7 +90,7 @@ async function fetchAndSavePDF(api_url, zpl) {
 
     if (r1.ok && r1.status === 200) {
         let blob = await r1.blob()
-        await saveLabel(blob, 'pdf');
+        await saveLabel(blob, 'pdf', counter);
     } else {
         console.log('error in fetching pdf', `status = ${r1.status}`, await r1.text(), `zpl=${zpl}`)
     }
@@ -125,7 +125,7 @@ function notify(text, glyphicon, type, delay) {
     }).show();
 }
 
-async function displayAndSaveImage(api_url, zpl, width, height, savePng) {
+async function displayAndSaveImage(api_url, zpl, width, height, savePng, counter) {
     let r1 = await fetch(api_url, {
         method: "POST",
         body: zpl,
@@ -153,7 +153,7 @@ async function displayAndSaveImage(api_url, zpl, width, height, savePng) {
         $('#label').animate({'top': '0px'}, 1500);
 
         if (savePng) {
-            await saveLabel(blob, "png")
+            await saveLabel(blob, "png", counter)
         }
 
     } else {
@@ -203,15 +203,23 @@ function startTcpServer() {
                     continue
                 }
 
+                let items = global.localStorage.getItem('counter') || '0';
+                let counter = parseInt(items);
+                counter = isNaN(counter) ? 1 : counter;
+                console.log('counter?', items, counter)
+
                 let api_url = `https://api.labelary.com/v1/printers/${configs.density}dpmm/labels/${width}x${height}/0`;
                 console.warn("configs", configs["saveLabels"], "fileType", configs["fileType"])
                 let savePdf = configs['saveLabels'] && configs['filetype'] === '2';
                 let savePng = configs['saveLabels'] && configs['filetype'] === '1';
                 if (savePdf) {
-                    await fetchAndSavePDF(api_url, zpl);
+                    await fetchAndSavePDF(api_url, zpl, counter);
                 }
 
-                await displayAndSaveImage(api_url, zpl, width, height, savePng);
+                await displayAndSaveImage(api_url, zpl, width, height, savePng, counter);
+
+                global.localStorage.setItem('counter', `${++counter}`);
+
 
             }
         });
