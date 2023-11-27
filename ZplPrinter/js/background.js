@@ -1,16 +1,11 @@
 chrome.app.runtime.onLaunched.addListener(function () {
     chrome.app.window.create('main.html', {
-        frame: 'none',
-        bounds: {
-            width: 535,
-            height: 768
-        },
-        resizable: false,
+        frame: 'chrome'
     });
 });
 
 chrome.runtime.onInstalled.addListener(function (details) {
-    if (details.reason == "install" || details.reason == "update") {
+    if (details.reason === "install" || details.reason === "update") {
         chrome.storage.local.set({
             isOn: true,
             density: '8',
@@ -23,8 +18,8 @@ chrome.runtime.onInstalled.addListener(function (details) {
             keepTcpSocket: false,
             saveLabels: false,
             filetype: '1',
-            path: null,
-	    counter: 0
+            path: "/tmp",
+	        counter: 0
         });
     }
 });

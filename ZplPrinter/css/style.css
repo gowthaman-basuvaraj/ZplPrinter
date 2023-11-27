@@ -19,7 +19,7 @@ input:required:invalid, input:focus:invalid { border-color: #d9534f; }
     border: 1px solid transparent;
     border-color: #e7e7e7 !important;
     border-radius: 4px;
-    height: 623px;
+    height: 80vh;
     overflow: auto;
 }
 
@@ -47,4 +47,7 @@ input:required:invalid, input:focus:invalid { border-color: #d9534f; }
 .panel-heading-blur {
     background-color: #215480 !important;
     border-color: #215480 !important;
+}
+table {
+    width: 100%;
 }
